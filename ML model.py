@@ -32,20 +32,50 @@ def remove_punctuation(text):
     finaltext="".join(u for u in text if u not in ("?", ".", ";", ":",  "!",'"'))
     return finaltext
 
+#removes punctuation from relevant fields
 fulldf["Title"] = fulldf["Title"].apply(remove_punctuation)
 
-
-finaldf = fulldf[["Title", "orientation"]]
+#creating a final dataframe with only relevant info
+finaldf = fulldf[["Title","Post_Text", "orientation"]]
 finaldf.head()
 
+
+#doing the train test split
 index = finaldf.index
 finaldf["random"] = np.random.randn(len(index))
-
 train = finaldf[finaldf["random"] <= 0.8]
 test = finaldf[finaldf['random'] > 0.8]
 
+
+# count vectorizer:
+from sklearn.feature_extraction.text import CountVectorizer
+vectorizer = CountVectorizer(token_pattern=r'\b\w+\b')
+train_matrix = vectorizer.fit_transform(train['Title'])
+test_matrix = vectorizer.transform(test['Title'])
+
+
+# Logistic Regression
+from sklearn.linear_model import LogisticRegression
+lr = LogisticRegression()
+
+X_train = train_matrix
+X_test = test_matrix
+y_train = train['orientation']
+y_test = test['orientation']
+
+lr.fit(X_train,y_train)
+
+predictions = lr.predict(X_test)
+
+
+# find accuracy, precision, recall:
+from sklearn.metrics import confusion_matrix,classification_report
+new = np.asarray(y_test)
+confusion_matrix(predictions,y_test)
+print(classification_report(predictions,y_test))
+
 def wordcloud():
-    #creates wordcloud of titles
+    #creates wordcloud of titles from the full data
     #can probably do some other things
     stopwords = set(STOPWORDS)
     stopwords.update(["br", "href"])
@@ -56,4 +86,4 @@ def wordcloud():
     plt.savefig('wordcloud11.png')
     plt.show()
 
-wordcloud()
+#wordcloud()

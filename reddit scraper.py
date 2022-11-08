@@ -1,4 +1,6 @@
 #dissertation project subreddit reader
+#Robert Philipson
+
 
 import praw
 import pandas as pd
@@ -16,7 +18,7 @@ def scraper(sub, orientation):
         posts = redditRead.subreddit(sub)
         #reads the subreddit
         print("reading sub:", sub) #debugging line, lets me know the loop is running
-        for post in posts.hot(limit=100):  #goes through a maximum of the top 1000 posts on a subreddit, retrieving information
+        for post in posts.hot(limit=1000):  #goes through a maximum of the top 1000 posts on a subreddit, retrieving information
                 posts_dict1["Title"].append(post.title)
                 posts_dict1["Post_Text"].append(post.selftext)
                 posts_dict1["Post_ID"].append(post.id)
