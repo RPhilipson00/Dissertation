@@ -2,7 +2,7 @@
 #Robert Philipson
 
 
-#import absolutely heaps of stuff
+#import absolutely heaps of stuff in no particular order
 import pandas as pd
 import nltk
 from nltk.corpus import stopwords
@@ -17,8 +17,10 @@ import plotly.express as px
 import wordcloud
 from wordcloud import WordCloud, STOPWORDS
 import numpy as np
-
-
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix,classification_report
+from sklearn import preprocessing
 fulldf=pd.read_csv("posts.csv") #brings in all the data from the csv file 
 fulldf.head()
 
@@ -48,28 +50,23 @@ test = finaldf[finaldf['random'] > 0.8]
 
 
 # count vectorizer:
-from sklearn.feature_extraction.text import CountVectorizer
 vectorizer = CountVectorizer(token_pattern=r'\b\w+\b')
-train_matrix = vectorizer.fit_transform(train['Title'])
-test_matrix = vectorizer.transform(test['Title'])
+train_matrix = vectorizer.fit_transform(train['Post_Text'].values.astype("U"))
+test_matrix = vectorizer.transform(test['Post_Text'].values.astype("U"))
 
 
 # Logistic Regression
-from sklearn.linear_model import LogisticRegression
 lr = LogisticRegression()
-
 X_train = train_matrix
 X_test = test_matrix
 y_train = train['orientation']
 y_test = test['orientation']
-
 lr.fit(X_train,y_train)
-
 predictions = lr.predict(X_test)
 
 
 # find accuracy, precision, recall:
-from sklearn.metrics import confusion_matrix,classification_report
+
 new = np.asarray(y_test)
 confusion_matrix(predictions,y_test)
 print(classification_report(predictions,y_test))
@@ -77,13 +74,14 @@ print(classification_report(predictions,y_test))
 def wordcloud():
     #creates wordcloud of titles from the full data
     #can probably do some other things
+    #just using it to test atm
     stopwords = set(STOPWORDS)
     stopwords.update(["br", "href"])
-    textt = " ".join(review for review in rightdf.Title)
+    textt = " ".join(review for review in leftdf.Post_Text.values.astype("U"))
     wordcloud = WordCloud(stopwords=stopwords).generate(textt)
     plt.imshow(wordcloud, interpolation='bilinear')
     plt.axis("off")
-    plt.savefig('wordcloud11.png')
+    plt.savefig('wordcloudrw.png')
     plt.show()
 
-#wordcloud()
+wordcloud()

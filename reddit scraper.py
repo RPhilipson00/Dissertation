@@ -4,6 +4,7 @@
 
 import praw
 import pandas as pd
+import nltk
 redditRead = praw.Reddit(client_id="ZHd4uF6mhAs2e8_rFnJLnA",
                                 client_secret="OlnDy_ZTJLX9CHXXGnJ4-3Z-fRbFOg",
                                 user_agent="Dissertation Scraper",
@@ -18,12 +19,13 @@ def scraper(sub, orientation):
         posts = redditRead.subreddit(sub)
         #reads the subreddit
         print("reading sub:", sub) #debugging line, lets me know the loop is running
-        for post in posts.hot(limit=1000):  #goes through a maximum of the top 1000 posts on a subreddit, retrieving information
-                posts_dict1["Title"].append(post.title)
-                posts_dict1["Post_Text"].append(post.selftext)
-                posts_dict1["Post_ID"].append(post.id)
-                posts_dict1["User_Hash"].append(hash(post.author))#hashes the username to stay within ethical guidelines
-                posts_dict1["orientation"].append(orientation)
+        for post in posts.top(limit=1000):  #goes through a maximum of the top 1000 posts on a subreddit, retrieving information
+                if post.is_self:
+                        posts_dict1["Title"].append(post.title)
+                        posts_dict1["Post_Text"].append(post.selftext)
+                        posts_dict1["Post_ID"].append(post.id)
+                        posts_dict1["User_Hash"].append(hash(post.author))#hashes the username to stay within ethical guidelines
+                        posts_dict1["orientation"].append(orientation)
         #takes specific fields from the posts, builds list
 
 
