@@ -35,10 +35,10 @@ def remove_punctuation(text):
     return finaltext
 
 #removes punctuation from relevant fields
-fulldf["Title"] = fulldf["Title"].apply(remove_punctuation)
+fulldf["Post_Text"] = fulldf["Post_Text"].apply(remove_punctuation)
 
 #creating a final dataframe with only relevant info
-finaldf = fulldf[["Title","Post_Text", "orientation"]]
+finaldf = fulldf[["Post_Text", "orientation"]]
 finaldf.head()
 
 
@@ -84,4 +84,4 @@ def wordcloud():
     plt.savefig('wordcloudrw.png')
     plt.show()
 
-wordcloud()
+#wordcloud()
