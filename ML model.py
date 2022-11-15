@@ -56,7 +56,7 @@ test_matrix = vectorizer.transform(test['Post_Text'].values.astype("U"))
 
 
 # Logistic Regression
-lr = LogisticRegression()
+lr = LogisticRegression(max_iter=500)
 X_train = train_matrix
 X_test = test_matrix
 y_train = train['orientation']
