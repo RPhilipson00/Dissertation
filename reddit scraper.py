@@ -29,8 +29,8 @@ def scraper(sub, orientation):
                         #takes specific fields from the posts, builds list
                         submission = redditRead.submission(id=post.id)
                         submission.comments.replace_more(limit=0)
-                        for comment in submission.comments:
-                                if len(comment.body)>150:
+                        for comment in submission.comments.list():
+                                if len(comment.body)>200:
                                         posts_dict1["Post_Text"].append(comment.body)
                                         posts_dict1["Post_ID"].append(post.id)
                                         posts_dict1["User_Hash"].append(hash(comment.author))
