@@ -19,10 +19,10 @@ def scraper(sub, orientation):
         posts = redditRead.subreddit(sub)
         #reads the subreddit
         print("reading sub:", sub) #debugging line, lets me know the loop is running
-        for post in posts.hot(limit=1000):  #goes through a maximum of the top 1000 posts on a subreddit, retrieving information
+        for post in posts.hot(limit=1000):  #goes through the top 1000 'hot' posts on a subreddit, retrieving information
                 if post.is_self: #adds post to dataframe if they have body text 
                         AllText = post.title + "\n" + post.selftext #combines post title and text into one variable
-                        posts_dict1["Post_Text"].append(AllText)
+                        posts_dict1["Post_Text"].append(AllText.lower())
                         posts_dict1["Post_ID"].append(post.id)
                         posts_dict1["User_Hash"].append(hash(post.author))#hashes the username to stay within ethical guidelines
                         posts_dict1["orientation"].append(orientation)
@@ -30,12 +30,13 @@ def scraper(sub, orientation):
                         submission = redditRead.submission(id=post.id)
                         submission.comments.replace_more(limit=0)
                         for comment in submission.comments.list():
-                                if len(comment.body)>200:
-                                        posts_dict1["Post_Text"].append(comment.body)
+                                if len(comment.body)>200 and comment.author != "AutoModerator" and comment.author != "socialism-ModTeam":
+                                        posts_dict1["Post_Text"].append((comment.body).lower())
                                         posts_dict1["Post_ID"].append(post.id)
                                         posts_dict1["User_Hash"].append(hash(comment.author))
                                         posts_dict1["orientation"].append(orientation)
                         #takes text from every top level comment of the post that is over 150 characters and adds to the dataset
+                        #also filters out bot moderator comments
                                         
 
 
