@@ -19,13 +19,15 @@ from wordcloud import WordCloud, STOPWORDS
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import confusion_matrix,classification_report
+from sklearn.metrics import confusion_matrix,classification_report,accuracy_score
 from sklearn import preprocessing
 import tkinter as tk
 from tkinter import ttk
 from collections import Counter
 from PIL import ImageTk, Image
+import math
 def menu():
+    #for testing stuff in command line
     menuinput = input("do you want to: \n a: create a wordcloud \n b: view information about keywords \n c: test the model for yourself \n d: run the model again \n e: run the gui")
     if menuinput ==  "a":
         wordcloud(finaldf)
@@ -40,27 +42,31 @@ def menu():
     else:
         print("invalid input")
         menu()
-#subroutine to remove punctuation from stuff
+
 def remove_punctuation(text):
+    #subroutine to remove punctuation from stuff
     finaltext="".join(u for u in text if u not in ("?", ".", ";", ":",  "!",'"'))
     return finaltext
 
-#sub for creating dataframes
+
 def dataframes():
+    #sub for creating a few vital dataframes & series
+    #other series and such are created as and when needed
     #brings in all the data from the csv file
     global fulldf
     fulldf=pd.read_csv("posts.csv")  
     fulldf.head()
 
-    #split into 2 dataframes, 1 left wing, 1 right wing
-    #not actually needed for the model but probably useful for other stuff
-    leftdf = fulldf[fulldf["orientation"] == 0]
-    rightdf = fulldf[fulldf["orientation"] == 1]
-
     #removes punctuation from relevant fields
     fulldf["Post_Text"] = fulldf["Post_Text"].apply(remove_punctuation)
-
-    #creating a final dataframe with only relevant info
+    #split into 2 dataframes, 1 left wing, 1 right wing
+    global leftdf
+    global rightdf
+    leftdf = fulldf[fulldf["orientation"] == 0]
+    rightdf = fulldf[fulldf["orientation"] == 1]
+    global dfseries
+    dfseries = pd.Series(fulldf['Post_Text'].values)
+    #creating a final dataframe with only relevant info for training/testing
     global finaldf
     finaldf = fulldf[["Post_Text", "orientation"]]
     finaldf.head()
@@ -88,12 +94,20 @@ def model():
     y_test = test['orientation']
     lr.fit(X_train,y_train)
     predictions = lr.predict(X_test)
-
+    
     #determine accuracy and print data
     new = np.asarray(y_test)
     confusion_matrix(predictions,y_test)
-    print(classification_report(predictions,y_test))
-    menu()
+    #y_pred = log.predict(X_test)
+    global score
+    score = (round((accuracy_score(predictions,y_test))*100, 1), "%")
+    global classreport
+    classreport = (classification_report(predictions,y_test))
+    print(classreport)
+    print(score)
+    print("model complete, running GUI")
+    gui()
+    #menu()
 #allows users to input their own text to be predicted
 def inputtester(vectorizer, lr):
     #takes user input and puts it into correct format
@@ -104,9 +118,9 @@ def inputtester(vectorizer, lr):
     #runs the model and outputs conclusion
     inputpredict = lr.predict(cleaninput)
     if inputpredict==[1]:
-        print("I predict this is a right wing comment")
+        print("I predict this is a right leaning comment")
     elif inputpredict==[0]:
-        print("I predict this is a left wing comment")
+        print("I predict this is a left leaning comment")
     else:
         print("something has gone very wrong for this to display")
     rerun()
@@ -132,7 +146,7 @@ def keywords(dataframe):
     keyword = keyword.lower()
     
     #create a subseries of all the rows of the data that contain the keyword
-    dfseries = pd.Series(dataframe['Post_Text'].values)
+    #dfseries = pd.Series(dataframe['Post_Text'].values)
     subseries = dfseries[dfseries.str.contains(keyword)]
     print(subseries) #debugging line remove when complete
     leftcounter = 0
@@ -183,58 +197,74 @@ def keywords(dataframe):
     keywords(finaldf) #runs again for debugging purposes            
     menu()
     
-def wordcloud(dataframe):
+def wordcloud(series):
     #creates wordcloud of titles from the full data
     #can probably do some other things
     #just using it to test atm
-    
+    #dfseries = pd.Series(dataframe['Post_Text'].values)
     stopwords = set(STOPWORDS)
     stopwords.update(["br", "href"])
-    text = " ".join(review for review in dataframe.Post_Text.values.astype("U"))
+    text = " ".join(review for review in series.values.astype("U"))
     wordcloud = WordCloud(stopwords=stopwords).generate(text)
     plt.imshow(wordcloud, interpolation='bilinear')
     plt.axis("off")
     plt.savefig("wordcloud.png")
+    wordcloudGUI()
     
-    openWindow = tk.Toplevel(root)
-    openWindow.title("Wordcloud")
+def wordcloudGUI():
+    #displays wordcloud in the GUI
+    cloudGUI = tk.Toplevel(root)
+    cloudGUI.title("Wordcloud")
     wcimage = Image.open("wordcloud.png")
     test = ImageTk.PhotoImage(wcimage)
-    label1 = ttk.Label(openWindow, image=test)
+    label1 = ttk.Label(cloudGUI, image=test)
     label1.image = test
     label1.pack()
-    openWindow.mainloop()
-    #plt.show()
-    #menu()
-
+    cloudGUI.mainloop()
+def modelinformationGUI():
+    infoPanel = tk.Toplevel(root)
+    infoPanel.title("Model Information")
+    datalen = len(dfseries)
+    lbltext = "the model uses logistic regression to predict the political leaning of a given reddit post \nFor this running, the dataset had ", datalen ," posts in it."
+    accuracytext = "On this occaision, the model was ", score , " accurate in its own tests."
+    infolbl = ttk.Label(infoPanel, text = lbltext)
+    infolbl2 = ttk.Label(infoPanel, text = accuracytext)
+    infolbl.pack()
+    infolbl2.pack()
+    infoPanel.mainloop()
 def gui():
-    #builds and controls the GUI
+    #builds and controls the GUI homepage
     global root
     root = tk.Tk()
     root.title("Main Window")
     #main window buttons
+    modelinfobutton = ttk.Button(root, text='view model information', command=modelinformationGUI)
     modelrunbutton = ttk.Button(root, text='run model again', command=model)
-    wordcloudbutton = ttk.Button(root, text='create wordcloud', command=lambda: wordcloud(finaldf))
     keywordsbutton = ttk.Button(root, text='view keywords information', command=lambda: keywords(finaldf))
     inputtesterbutton = ttk.Button(root, text='test the model for yourself', command=lambda: inputtester(vectorizer, lr))
     inputtesterbutton.pack()
     keywordsbutton.pack()
     modelrunbutton.pack()
-    wordcloudbutton.pack()
-
-    newwindowbtn = ttk.Button(root, text ="Click to open a new window", command = Newwindow)
+    modelinfobutton.pack()
+    newwindowbtn = ttk.Button(root, text ="Create Wordclouds", command = cloudDesignGUI)
     newwindowbtn.pack()
     
     root.mainloop()
 
 
-def Newwindow():
-    #opens new window
-    openWindow = tk.Toplevel(root)
-    openWindow.title("New window")
-    newwindowlbl = ttk.Label(openWindow, text ="This is a new window")
-    newwindowlbl.pack()
-    openWindow.mainloop()
+def cloudDesignGUI():
+    #opens new GUI window for the creation of different wordclouds
+    designWindow = tk.Toplevel(root)
+    designWindow.title("Wordcloud Design")
+    designWindowlbl = ttk.Label(designWindow, text ="Click a button to view a pre-designed wordcloud, or create your own") 
+    selectBtn1 = ttk.Button(designWindow, text='Use Full Dataset', command=lambda: wordcloud(pd.Series(finaldf['Post_Text'].values)))
+    selectBtn2 = ttk.Button(designWindow, text='Use only left leaning subreddits', command=lambda: wordcloud(pd.Series(leftdf['Post_Text'].values)))
+    selectBtn3 = ttk.Button(designWindow, text='Use only right leaning subreddits', command=lambda: wordcloud(pd.Series(rightdf['Post_Text'].values)))
+    designWindowlbl.pack()
+    selectBtn1.pack()
+    selectBtn2.pack()
+    selectBtn3.pack()
+    designWindow.mainloop()
 dataframes()
 model()
 #keywords(finaldf)
