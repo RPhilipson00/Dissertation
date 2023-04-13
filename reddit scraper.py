@@ -11,7 +11,7 @@ redditRead = praw.Reddit(client_id="ZHd4uF6mhAs2e8_rFnJLnA",
                                 username="Dissbot2000",
                                 password="MEGAsecretdisspass2022")
 #Creates an authorised praw instance to read reddit
-posts_dict1 = {"Post_ID": [], "Post_Text": [], "User_Hash": [], "orientation": []}
+posts_dict1 = {"Post_ID": [], "Post_Text": [], "User_Hash": [], "orientation": [], "sub":[]}
 #initialises pandas dataframe with fields I'm interested in
 
 
@@ -20,12 +20,13 @@ def scraper(sub, orientation):
         #reads the subreddit
         print("reading sub:", sub) #debugging line, lets me know the loop is running
         for post in posts.hot(limit=1000):  #goes through the top 1000 'hot' posts on a subreddit, retrieving information
-                if post.is_self: #adds post to dataframe if they have body text 
+                if (post.is_self or len(post.title)>120) and post.author != "AutoModerator": #adds post to dataframe if they have body text and aren't a bot mod
                         AllText = post.title + "\n" + post.selftext #combines post title and text into one variable
                         posts_dict1["Post_Text"].append(AllText.lower())
                         posts_dict1["Post_ID"].append(post.id)
                         posts_dict1["User_Hash"].append(hash(post.author))#hashes the username to stay within ethical guidelines
                         posts_dict1["orientation"].append(orientation)
+                        posts_dict1["sub"].append(sub)
                         #takes specific fields from the posts, builds list
                         submission = redditRead.submission(id=post.id)
                         submission.comments.replace_more(limit=0)
@@ -35,6 +36,7 @@ def scraper(sub, orientation):
                                         posts_dict1["Post_ID"].append(post.id)
                                         posts_dict1["User_Hash"].append(hash(comment.author))
                                         posts_dict1["orientation"].append(orientation)
+                                        posts_dict1["sub"].append(sub)
                         #takes text from every top level comment of the post that is over 150 characters and adds to the dataset
                         #also filters out bot moderator comments
                                         
