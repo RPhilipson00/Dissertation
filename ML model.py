@@ -148,7 +148,7 @@ def keywords(dataframe, keyword):
 
     #prompts the user for an input then converts it to lower case, since dataset is lower case
     keyword = keyword.lower()
-    
+    keyword = str(keyword + " ")
     #create a subseries of all the rows of the data that contain the keyword
     subseries = dfseries[dfseries.str.contains(keyword)]
     print(subseries) #debugging line remove when complete
@@ -203,7 +203,7 @@ def keywords(dataframe, keyword):
                   "this is made up of ", str(rightpercent), "% in right leaning subreddits, and ", str(leftpercent), "% in left leaning ones \n",
                   "it appeared in ", str(leftproportion), "% of posts in left leaning subreddits \n",
                   "and in ", str(rightproportion), "% of posts in right leaning subreddits \n",
-                  str(linex), "posts came from ", str(usercount), " users, with 1 user posting ", str((bag_words.most_common(1)[0][1])), " seperate times",)
+                  str(linex), "posts came from ", str(usercount), " users, with the top user posting ", str((bag_words.most_common(1)[0][1])), " seperate times",)
         strout = ''.join(map(str, output))
         proportions = []
         labels = []
@@ -242,8 +242,11 @@ def keywords(dataframe, keyword):
         #ax1.plot(plt.pie(proportions, labels = labels, autopct='%.2f'))
         #plt.show()
         #mainInfoLbl.pack()
+        return (" ")
     else:
-      print("this word does not appear in the dataset")
+
+        
+      return ("this word does not appear in the dataset")
 
 
 
@@ -312,14 +315,17 @@ def gui():
 def keywordsGUI():
     keywordsWindow = tk.Toplevel(root)
     keywordsWindow.title("Keyword explorer")
-    keywordsWindowlbl = ttk.Label(keywordsWindow, text="enter a word to see how it appears in the data")
+    keywordsWindowlbl = ttk.Label(keywordsWindow, text="enter a word or short phrase to see how it appears in the data")
     inputbox = tk.Entry(keywordsWindow)
-    enterbtn = ttk.Button(keywordsWindow, text="Enter", command=lambda: keywords(fulldf, inputbox.get()))
+    noResultslbl = ttk.Label(keywordsWindow, text=" ")
+    enterbtn = ttk.Button(keywordsWindow, text="Enter", command=lambda: noResultslbl.config(text = (keywords(fulldf, inputbox.get()))))
     keywordsWindowlbl.pack()
     inputbox.pack()
     enterbtn.pack()
+    noResultslbl.pack()
 
 def modelTestGUI():
+    #allows user to test the model, either using a tex input box or their own csv file
     modelTestWindow = tk.Toplevel(root)
     modelTestWindow.title("Model Tester")
     modelTestWindowlbl = ttk.Label(modelTestWindow, text="Enter a sentence for the model to predict")
@@ -340,14 +346,10 @@ def modelTestGUI():
     label_file_explorer.pack()
     filebtn.pack()
 
-##def keywordInfoGUI(strout):
-##    keyInfoWindow = tk.Toplevel(root)
-##    keyInfoWindow.title("Keyword Info")
-##    mainInfoLbl = ttk.Label(keyInfoWindow, text=strout)
     
    # mainInfoLbl.pack()
 def cloudDesignGUI():
-    #opens new GUI window for the creation of different wordclouds
+    #opens new GUI window for the creation of different wordclouds, including drop down menu
     designWindow = tk.Toplevel(root)
     designWindow.title("Wordclouds")
     designWindowlbl = ttk.Label(designWindow, text ="Click a button to view a pre-designed wordcloud, or create your own") 
@@ -360,6 +362,7 @@ def cloudDesignGUI():
     
     drop = OptionMenu(designWindow, clicked, *dropDownOptions)
     def subcloud(menuInput):
+        #builds series based on drop down menu selection
         subname = menuInput
         subdf = fulldf[fulldf['sub'] == subname]
         relatedSeries = pd.Series(subdf['Post_Text'].values)
@@ -437,20 +440,6 @@ def userInfo(number):
         plt.tight_layout()
         plt.show()
                                     
-##        leftcount = 0
-##        rightcount = 0
-##        bothtrue = False
-##        for x in range(0,20):
-##            for i in userOrientationSeries:
-##                if i == 0:
-##                    leftcount+=1
-##                elif i == 1:
-##                    rightcount+=1
-##
-##            if leftcount>0 and rightcount>0:
-##                bothtrue = True
-##            x+=1
-##        print("bothtrue: ", bothtrue)
     else:
         print("no")
         userInfo(number)
