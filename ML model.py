@@ -31,22 +31,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import networkx as nx
 import random
-def menu():
-    #for testing stuff in command line
-    menuinput = input("do you want to: \n a: create a wordcloud \n b: view information about keywords \n c: test the model for yourself \n d: run the model again \n e: run the gui")
-    if menuinput ==  "a":
-        wordcloud(finaldf)
-    elif menuinput == "b":
-        keywords(finaldf)
-    elif menuinput == "c":
-        inputtester(vectorizer, lr)
-    elif menuinput == "d":
-        model()
-    elif menuinput == "e":
-        gui()
-    else:
-        print("invalid input")
-        menu()
+
 
 def remove_punctuation(text):
     #subroutine to remove punctuation from stuff
@@ -124,18 +109,8 @@ def inputtester(cleaninput):
     elif inputpredict==[0]:
         prediction = "I predict this is a left leaning comment"
     return prediction
-    #rerun()
-    #menu()
-def rerun():
-    #allows the user to enter more custom text
-    rerun = input("enter some more text? (y/n)")
-    if rerun == "y":
-        inputtester(vectorizer, lr)
-    elif rerun == "n":
-        print("program end")
-    else:
-        print("input not recognised")
-        rerun()
+    
+
 
 def lengthfinder(df, sub):
     #finds the number of posts from a given subreddit in the dataset
@@ -229,11 +204,13 @@ def keywords(dataframe, keyword):
         def piechart(proportions, labels):
             piechartfig = plt.pie(proportions, labels = labels, autopct='%.2f')
             plt.savefig("pie.png")
-
+            plt.show()
+            plt.close()
         def bar(labels, countvals):
             barchartfig = plt.barh(labels,countvals)
             plt.savefig("bar.png")
-        
+            plt.show()
+            plt.close()
         
         #figure = plt.Figure(figsize=(2,2), dpi=100)
         #pie = FigureCanvasTkAgg(figure, keyInfoWindow)
@@ -439,6 +416,7 @@ def userInfo(number):
         plt.axis('off')
         plt.tight_layout()
         plt.show()
+        plt.close('all')
                                     
     else:
         print("no")
@@ -470,7 +448,7 @@ def browseFiles():
             leftcount+=1
         else:
             rightcount+=1
-    return("dataset contains " , str(leftcount) , " left wing and " , str(rightcount) , " right wing")
+    return("The model belives that the dataset contains " , str(leftcount) , " left wing posts and " , str(rightcount) , " right wing ones")
     
 dataframes()
 model()
