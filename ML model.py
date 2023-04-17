@@ -416,10 +416,10 @@ def userInfo(number):
         plt.axis('off')
         plt.tight_layout()
         plt.show()
-        plt.close('all')
+        plt.close()
                                     
     else:
-        print("no")
+        print(".")
         userInfo(number)
 
 def browseFiles():
