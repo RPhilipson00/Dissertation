@@ -53,6 +53,8 @@ def dataframes():
     global rightdf
     leftdf = fulldf[fulldf["orientation"] == 0]
     rightdf = fulldf[fulldf["orientation"] == 1]
+    print(leftdf.shape[0])
+    print(rightdf.shape[0])
     global dfseries
     dfseries = pd.Series(fulldf['Post_Text'].values)
     #creating a final dataframe with only relevant info for training/testing
@@ -63,6 +65,8 @@ def dataframes():
     userHashes = (fulldf['User_Hash'].unique())
     global subs
     subs = pd.Series((fulldf['sub'].unique()).astype('str'))
+    global subAcc
+    subAcc = [["republican", 0], ["libertarian", 0] ,["tories",0] ,["conservative", 0],["anarcho_capitalism", 0],["trump", 0], ["communism", 0],["socialism", 0],["labouruk", 0],["greenandpleasant",0],["democrats",0], ["anarchocommunism",0],["anarchism", 0]]
 #subroutine that actually does the training and testing
 def model():
     #doing the train test split
@@ -70,13 +74,12 @@ def model():
     finaldf["random"] = np.random.randn(len(index))
     train = finaldf[finaldf["random"] <= 0.8]
     test = finaldf[finaldf['random'] > 0.8]
-
+    
     #count vectorizer
     global vectorizer
     vectorizer = CountVectorizer(token_pattern=r'\b\w+\b')
     train_matrix = vectorizer.fit_transform(train['Post_Text'].values.astype("U"))
     test_matrix = vectorizer.transform(test['Post_Text'].values.astype("U"))
-
     #run the lr model
     global lr
     lr = LogisticRegression(solver="lbfgs", max_iter=5000)
@@ -86,7 +89,7 @@ def model():
     y_test = test['orientation']
     lr.fit(X_train,y_train)
     predictions = lr.predict(X_test)
-    
+    print(predictions)
     #determine accuracy and print data
     new = np.asarray(y_test)
     confusion_matrix(predictions,y_test)
@@ -97,9 +100,9 @@ def model():
     classreport = (classification_report(predictions,y_test))
     print(classreport)
     print(score)
+    
     print("model complete, running GUI")
     gui()
-    #menu()
 #allows users to input their own text to be predicted
 def inputtester(cleaninput):
     #runs the model and outputs conclusion
@@ -126,7 +129,7 @@ def keywords(dataframe, keyword):
     keyword = str(keyword + " ")
     #create a subseries of all the rows of the data that contain the keyword
     subseries = dfseries[dfseries.str.contains(keyword)]
-    print(subseries) #debugging line remove when complete
+    print(subseries) 
     leftcounter = 0
     rightcounter = 0
     #initalises a seperate series of all the orientation values and the user counter
@@ -134,7 +137,7 @@ def keywords(dataframe, keyword):
     subnameseries = pd.Series(dataframe['sub'].astype('str').values)
     userseries = pd.Series(dataframe['User_Hash'].astype('str').values)
     bag_words = Counter()
-    counters = [["republican", 0], ["libertarian", 0] ,["tories",0] ,["conservative", 0],["anarcho_capitalism", 0],["trump", 0], ["louderwithcrowder", 0], ["communism", 0],["socialism", 0],["labouruk", 0],["greenandpleasant",0],["democrats",0], ["anarchocommunism",0],["anarchism", 0]]
+    counters = [["republican", 0], ["libertarian", 0] ,["tories",0] ,["conservative", 0],["anarcho_capitalism", 0],["trump", 0], ["communism", 0],["socialism", 0],["labouruk", 0],["greenandpleasant",0],["democrats",0], ["anarchocommunism",0],["anarchism", 0]]
     
     #checks the orientations of every post that contains the keyword
     #works by comparing the keyword subseries with the orientation series
@@ -149,10 +152,8 @@ def keywords(dataframe, keyword):
                 counters[x][1] +=1
         userupdate = {userseries.loc[i] : 1}
         bag_words.update(userupdate)
-        #subname = subnameseries.loc[i]
        
 
-        #subcounter(subname)  
     #counts the number of posts the keyword features in and the number of unique users who posted using that keyword
     counter = len(subseries)
     usercount = len(bag_words)
@@ -212,13 +213,7 @@ def keywords(dataframe, keyword):
             plt.show()
             plt.close()
         
-        #figure = plt.Figure(figsize=(2,2), dpi=100)
-        #pie = FigureCanvasTkAgg(figure, keyInfoWindow)
-        #pie.get_tk_widget().pack()
-        #ax1=figure.add_subplot(221)
-        #ax1.plot(plt.pie(proportions, labels = labels, autopct='%.2f'))
-        #plt.show()
-        #mainInfoLbl.pack()
+
         return (" ")
     else:
 
@@ -235,14 +230,14 @@ def wordcloud(series):
     #creates wordcloud of titles from the full data
     #can probably do some other things
     #just using it to test atm
-    #dfseries = pd.Series(dataframe['Post_Text'].values)
     stopwords = set(STOPWORDS)
-    stopwords.update(["br", "href"])
+    stopwords.update(["br", "href", "s"])
     text = " ".join(review for review in series.values.astype("U"))
     wordcloud = WordCloud(stopwords=stopwords).generate(text)
     plt.imshow(wordcloud, interpolation='bilinear')
     plt.axis("off")
     plt.savefig("wordcloud.png")
+    plt.close()
     print(Counter(text.split()).most_common(10))
     wordcloudGUI()
     
@@ -361,12 +356,25 @@ def randomUserGUI():
     userWindowlbl1 = ttk.Label(userWindow, text ="there are " + str(len(userHashes)) + " unique users in the dataset")
     twoSubCount = 0
     fiveSubCount = 0
+    leftRightCount = 0
+    multiPostCount = 0
+    rwsubs = ["republican", "libertarian","tories","conservative","anarcho_capitalism","trump"]
+    lwsubs = ["communism","socialism","labouruk","greenandpleasant","democrats", "anarchocommunism","anarchism"]
+    
     for x in range(len(userHashes)):
         userdf = fulldf[fulldf['User_Hash'] == userHashes[x]]
+        userposts = userdf.shape[0]
+        if userposts>1:
+            multiPostCount += 1
         subseries=pd.Series(userdf['sub'].values)
         unique = subseries.unique()
         if len(unique)>1:
             twoSubCount+=1
+            if (np.in1d(unique,rwsubs).any() & np.in1d(unique,lwsubs).any()):
+                #works out if users post in both left and right wing subs
+                leftRightCount += 1
+                
+            
         if len(unique)>4:
             fiveSubCount+=1
     dropDownOptions = ['1','2','3','4','5']
@@ -378,6 +386,8 @@ def randomUserGUI():
     userWindowlbl2 = ttk.Label(userWindow, text ="Select an option to view data about a random user who posted in more than one subreddit")
     userWindowlbl3 = ttk.Label(userWindow, text = "of them, "+ str(twoSubCount)+ " users posted in more than one subreddit")
     userWindowlbl4 = ttk.Label(userWindow, text = str(fiveSubCount) + " users posted in 5 different subreddits")
+    print(leftRightCount)
+    print(multiPostCount)
     generateBtn = ttk.Button(userWindow, text="pick a random user", command = lambda:  userInfo(int(clicked.get())))
     userWindowlbl1.pack()
     userWindowlbl3.pack()
@@ -448,7 +458,7 @@ def browseFiles():
             leftcount+=1
         else:
             rightcount+=1
-    return("The model belives that the dataset contains " , str(leftcount) , " left wing posts and " , str(rightcount) , " right wing ones")
+    return("The model belives that the dataset contains " + str(leftcount) + " left wing posts and " + str(rightcount) + " right wing ones")
     
 dataframes()
 model()
