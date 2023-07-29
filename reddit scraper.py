@@ -7,11 +7,7 @@ import pandas as pd
 import nltk
 import time
 start_time = time.time()
-redditRead = praw.Reddit(client_id="ZHd4uF6mhAs2e8_rFnJLnA",
-                                client_secret="OlnDy_ZTJLX9CHXXGnJ4-3Z-fRbFOg",
-                                user_agent="Dissertation Scraper",
-                                username="Dissbot2000",
-                                password="MEGAsecretdisspass2022")
+redditRead = praw.Reddit()#make your own authorised instance here!
 #Creates an authorised praw instance to read reddit
 posts_dict1 = {"Post_ID": [], "Post_Text": [], "User_Hash": [], "orientation": [], "sub":[]}
 #initialises pandas dataframe with fields I'm interested in
